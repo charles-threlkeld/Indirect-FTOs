@@ -1,0 +1,175 @@
+---
+title: 'Speech Act Directness Effect on FTO' 
+author: "Lena Warnke, Chas Threlkeld"
+date: "3/18/2022"
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default 
+---
+
+```{r}
+# Clean up variables
+
+rm(list=ls()) 
+source("do_or_load.R")
+```
+
+# Libraries
+
+```{r, results='hide'}
+
+library(remedy)
+library(plyr)
+library(dplyr)
+library(lme4)
+library(lmerTest)
+library(ggplot2)
+library(hrbrthemes)
+library(tidyverse)
+library(sjmisc)
+library(sjPlot)
+library(jtools)
+library(interactions)
+library(stringr)
+
+# stan / bayes
+library(rstan)
+library(rstanarm)
+library(bayesplot)
+library(bayestestR)
+library(BayesFactor)
+
+#library(performance)
+
+library(bridgesampling)
+```
+
+# Data loading
+
+```{r}
+setwd("/home/chas/Projects/Indirect-FTOs/")
+
+ftodata <- read.csv("direct_ftos.csv",
+                    header=TRUE,
+                    na.strings = c("NaN"))
+
+
+ftodata$convo_num <- as.factor(ftodata$convo_num)
+
+```
+# Aux function for model reporting of regression models
+
+```{r}
+# Auxiliary Summary function
+# Summarizes the output (this code creates the output)
+
+# Call function with STAN model as arg
+
+## Indicate number of fixed effects, argument for the function
+summary_stan_model<-function(mod,nfixefs=3){ #number of fixed effects
+  samples_m1 <- as.data.frame(mod)
+  nfixefs<-nfixefs + 1 ## to including intercept
+  mns<-rep(NA,nfixefs)
+  ci95<-matrix(rep(NA,nfixefs*2),ncol=2)
+  for(i in 1:nfixefs){
+    condnames<-colnames(samples_m1)[1:nfixefs]
+    condnames[1]<-"Intercept"
+    mns[i]<-round(mean(samples_m1[,i]),digits=4) 
+    ci95[i,]<-round(quantile(probs=c(0.025,0.975),samples_m1[,i]),digits=4)
+  }
+  ## prob less than 0
+  prob_less<-rep(NA,nfixefs)
+  prob_more <-rep(NA,nfixefs)
+  for(i in 1:nfixefs){
+    prob_more[i]<-round(mean(samples_m1[,i]>0),digits=2)
+    prob_less[i]<-round(mean(samples_m1[,i]<0),digits=2)
+  }
+  res<-as.data.frame(cbind(condnames,mns,ci95,prob_more, prob_less))
+#  colnames(res)<-c("comparison","mean","lower","upper","P(b>0)", "P(b<0)")
+  colnames(res)<-c(mod$formula,"mean","lower","upper","P(b>0)", "P(b<0)")
+  return(res)
+}
+```
+
+# Run Bayesian regression models
+
+#Set sample size.
+
+```{r}
+SAMPLES <- 50000 #change back to 50000 at some point
+options(mc.cores = parallel::detectCores())
+
+```
+# Full model
+
+# Delete model files to force recompute, e.g. when sample size or data changed. (Disable with eval=false)
+
+```{r, eval=FALSE}
+
+# model
+file.remove("tmp/TRPs_.Rdata")
+file.remove("tmp/eot_collapsed_length.Rdata")
+file.remove("tmp/model_comparison.Rdata")
+file.remove("tmp/no_condition.Rdata")
+```
+
+THE MODELS
+
+#random intercepts only models
+
+```{r, results='hide'}
+
+#null model
+message("Fitting Bayesian regression model null model.")
+do_or_load("directness_null_model",
+           stan_glmer(fto ~ (1|convo_num),
+                      ftodata,
+                      chains = 4,
+                      iter = SAMPLES,
+                      diagnostic_file = "directness_null_model.csv", 
+                      refresh = 0))
+summary_null_model <- summary_stan_model(null_model, nfixefs = 1)
+
+#main effect of sentence type
+
+message("Fitting Bayesian regression model for directness")
+do_or_load("directness_model",
+           stan_glmer(fto ~ directness + (1|convo_num), 
+                      ftodata,
+                      chains = 4,
+                      iter = SAMPLES,
+                      diagnostic_file = "directness_model.csv", 
+                      refresh = 0))
+summary_directness_model <- summary_stan_model(directness_model , nfixefs = 2)
+
+```
+
+#Show summary.
+
+```{r}
+
+summary_null_model
+summary_directness_model
+
+```
+
+Bayesian Model comparison
+
+Using Quentin's bridge sampler
+
+
+```{r}
+
+# main effect of directness
+
+message("Bayes Factor model comparison: main effect of condition")
+
+do_or_load("model_comparison",
+           bayesfactor_models(directness_null_model,
+                              directness_model,
+                              denominator = directness_null_model))
+model_comparison
+bayesfactor_inclusion(model_comparison)
+
+```

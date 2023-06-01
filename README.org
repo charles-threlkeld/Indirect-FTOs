@@ -1,0 +1,54 @@
+* Introduction
+** Research Question(s)
+Do indirect speech acts have significantly longer FTOs than direct speech acts? If so, this suggests they take extra online processing time.
+*** If So (Theory Model 1)
+ISAs take extra reactive online processing. This means we can treat ISAs like Gricean maxims where one flouts the maxim by using syntax not in line with speech act.
+*** If Not (Theory Model 2)
+ISAs do not take extra reactive online processing. So speech acts are extracted early in the turn, well before the end of an utterance (in complete sentence utterances). This is in line with the theory that that speech acts are anticipated early in an utterance.
+
+Alternatively, there is no extra processing of an utterance if it is indirect. (But Lena found this is not right).
+
+Either way, we are not constrained by processing syntax into speech acts.
+** Follow up questions
+Does FTO correlate more highly with syntax or speech act? If syntax, then FTO may be a function of linguistic "decoding". If speech act, it may serve a social pragmatic function.
+** Background
+*** cite:&cohen2018back
+*** cite:&Searle1969
+*** cite:&sadock1974linguistictheory
+*** cite:&Williams_2018
+*** cite:&williams2015going
+*** cite:&briggs2017enabling
+*** cite:&Clark1981
+*** cite:&Wilske2006ServiceRobots
+*** cite:&brown1980characterizing
+*** cite:&Jokinen2009SpokenDialogue
+*** cite:&Lockshin2020SocialContext
+*** cite:&Wen2020ComprehensionNorms
+*** cite:&roque2020developing
+*** cite:&Sarathy2020ReasoningRequirements
+** Limitations of current study
+Data is not examining processing directly, e.g. by EEG, MEG, or eye-tracking, but is using FTO as a proxy. This means that processing happening before the FTO is hidden in our paradigm.
+
+We cannot distinguish between cognitive effects and social effects on timing [[cite:&Mertens2021CognitiveSocialDelay]].
+
+Limitations of data assumptions and nuissance assumptions of model
+* Data
+** Assumptions
+*** Speech Act Assumptions
+Stolke et al. annotated the corpus with speech act labels. We made a mapping of these labels to a smaller set that is motivated by linguistic theory of sentence types. For declarative, interrogative, and imperative sentences, we assume there are statement, question, and command speech acts. Utterances that are not sentences are not of interest for this work.
+*** Syntax Assumptions
+In linguistic theory, there are three sentence types: declarative, interrogative, and imperative. We built a computational model that fine-tuned BERT to categorize TCUs as one of these types (or non-sentential). 
+
+As of March 3, 2022, we assume that the utterance has the sentence type corresponding to the maximum likelihood given by our model, as long as that likelihood is above 50%.
+
+Further, we are only considering declarative and interrogative sentences, as there is too little data about imperative sentences.
+
+TODO: Check accuracy and perplexity of BERT model on sample Switchboard conversations by hand-tagging sentence type of SW convos.
+*** Timing Assumptions
+Two transcriptions of the Switchboard corpus are used for our data. First, the Stolcke et al. annotations based on the Penn Treebank transcriptions via the Linguistic Consortium. From here, we get the TCUs and dialogue act tags. Second, the Mississippi State University transcriptions, from which we get word-by-word timing information.
+
+Since the transcriptions are not identical, we rely on a few heuristics in matching the word-by-word timing of the MSU to the TCU-level transcription of the Linguistic Consortium. In our dataset, we only include conversations that were at least 90% identical word-by-word match and less than 2% words that matched none of our other heuristics.
+
+We are also only including ftos that are between -1000 and 1000ms. 
+* Results
+* Conclusion
